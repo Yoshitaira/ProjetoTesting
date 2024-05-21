@@ -1,0 +1,111 @@
+Cadastro de usuário:
+    Validação de CPF
+        11 digitos, apenas números 
+    Validação de Email
+        biblioteca validar-email
+        exemplo@email.com
+    Validação de Nome
+        Apenas letras e espaços
+        Proibido estar nulo
+    Validção de Senha 
+        1 letra, 1 número, 1 caracter especial
+        Proibido estar nulo
+        verificação dupla
+        criptografar para banco de dados
+    Autorização de usuário
+        sempre auth = 2 
+        apenas adm tem nível 1 de autorização
+
+Login de usuário:
+    Verificação de CPF
+    Verificação de senha
+        ocultação de caracteres
+    Esqueci a senha
+        na segunda tentativa o usuário pode trocar a senha
+
+Exclusão de usuário:
+    validar a senha e a palavra chave
+        Apenas o proprietário pode excluir a própria conta e só a própria conta
+    Super usuário e/ou Administrador
+        Pode excluir qualquer conta
+
+Alterção de usuário
+    Validar Usuário ADM
+    Validar Senha ADM
+        Pode Alterar qualquer dado de qualquer conta
+    Validar Usuário commom
+    Validar Senha commom
+    Validar palavra chave
+        Pode alterar apenas os próprios dados
+
+Cadastro de produto
+    Validar Usuário ADM
+    Validar Senha ADM
+    Verificação de Autorização
+        Pode cadastrar qualquer dado de qualquer produto
+
+Exclusão de Produto
+    Validar Usuário ADM
+    Validar Senha ADM
+    Verificação de Autorização
+        Pode exlcuir qualquer produto
+        
+Alteração de produto
+    Validar Usuário ADM
+    Validar Senha ADM
+    Verificação de Autorização
+        Pode exlcuir qualquer produto
+
+
+
+def user_log():
+            global vcpf
+            # global vauth
+            vauth = False
+            def user_login(vcpf, vsenha):
+                # vauth = vauth
+                nonlocal vauth
+                databaset.cursor.execute("SELECT SENHA, AUTORIZAÇÃO FROM user WHERE CPF = ?", (vcpf,))
+                rs = databaset.cursor.fetchone()
+
+                if rs is None:
+                    return False
+            #cirptografia armazenada no cadastro     
+                vs_crip_arm = rs[0]
+                vauth = rs[1]
+                
+
+            #criptografia atual
+                hasher = hashlib.sha256()
+                hasher.update(vsenha.encode('utf-8'))
+                vs_crip_forn = hasher.hexdigest()
+
+                if str(vs_crip_arm.decode('utf-8')) == vs_crip_forn and vauth==1:
+                    return True
+                else:
+                    return vauth == 2
+                
+            t = 3 # number of tries to login
+            while t > 0 :
+                vcpf = cpf_entry_str.get()
+                vsenha = senha_entry_str.get()
+            
+                if user_login(vcpf, vsenha) and vauth == 2:
+                    print("Login bem-sucedido!")
+                    span = messagebox.showinfo(title="LOGIN", message= "Você ta dentro!")
+                    menu_user()
+                    break
+                elif user_login(vcpf, vsenha) and vauth == 1:
+                    print("Login bem-sucedido!")
+                    span = messagebox.showinfo(title="LOGIN", message= "Você ta dentro!")
+                    menu_admin()
+                    break
+                else:
+                    t -= 1 
+                    print(f"CPF ou senha incorretos. Tente novamente. Restam {t} tentativas")
+                    span = messagebox.showinfo(title="ALERTA", message= f"Confirme os dados e tente novamente. Você tem {t} tentativas.")
+
+            if t == 0:
+                print("Você excedeu o número de tentativas permitidas. Tente novamente mais tarde.")
+                span = messagebox.showinfo(title="!!!!ALERTA!!!!", message= "BLOQUEADO!")
+                quit()
